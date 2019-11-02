@@ -1,5 +1,8 @@
-from capture.core import Capture
+from capture.FceuxStreamCapture import FceuxStreamCapture
+from gamestate.models import Game
 
-capture = Capture()
-capture.set_source('tetris.png')
-capture.from_image()
+capture = FceuxStreamCapture()
+
+game = Game()
+game.connect(capture)
+game.capture.listen()
