@@ -1,5 +1,5 @@
-from sirtetris.capture import FceuxStreamCapture
-from sirtetris.gamestate.models import Game
+from capture.FceuxStreamCapture import FceuxStreamCapture
+from gamestate.models import Game
 
 capture = FceuxStreamCapture()
 
