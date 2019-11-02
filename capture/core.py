@@ -10,6 +10,10 @@ class Capture:
     xtiles = None
     ytiles = None
 
+    @abstractmethod
+    def is_spawn_field_empty(self):
+        pass
+
 
 class ImageCapture(Capture):
     tile_width = None
@@ -18,6 +22,7 @@ class ImageCapture(Capture):
     field_offset_y = None
     next_mino_offset_x = None
     next_mino_offset_y = None
+    image = None
 
     @abstractmethod
     def __init__(self):
@@ -44,6 +49,8 @@ class ImageCapture(Capture):
         if not image:
             print('I can\'t see shit.')
 
+        self.image = image
+
         # Get blocks
         field = self.get_field(self.field_offset_x, self.field_offset_y, self.xtiles, self.ytiles, image)
         self.game.state.set_blocks(field)
@@ -57,8 +64,7 @@ class ImageCapture(Capture):
         column3 = not (square[0][2] and square[1][2] and square[2][2])
 
         if column1 and column2 and column3:
-            square[3, 0] = square[3, 1] = square[3, 2] = square[3, 3] = False
-            square[0, 3] = square[1, 3] = square[2, 3] = False
+            square = numpy.ones((2, 2), dtype=bool)
             self.game.state.set_next_mino(square)
             self.game.state.capturing_done()
             return
@@ -74,6 +80,10 @@ class ImageCapture(Capture):
 
         self.game.state.set_next_mino(mino)
         self.game.state.capturing_done()
+
+    def is_spawn_field_empty(self):
+        field = self.get_field(self.field_offset_x, self.field_offset_y, 5, 1, self.image)
+        return field[4, 0]
 
     def get_field(self, offset_x, offset_y, width, height, image):
         field = numpy.zeros((width, height), dtype=bool)

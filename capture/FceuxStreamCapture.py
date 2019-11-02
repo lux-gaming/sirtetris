@@ -13,7 +13,7 @@ class FceuxStreamCapture(NesImageCapture):
 
     def listen(self):
         while True:
-            sleep(0.016)
+            sleep(0.032)  # 30 Hz capturing should be enough.
             window = Gdk.get_default_root_window()
             screen = window.get_screen()
             for i, w in enumerate(screen.get_window_stack()):

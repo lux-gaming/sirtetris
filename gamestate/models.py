@@ -24,7 +24,6 @@ class Game:
 
     def game_state_done(self):
         print(self.state)
-        pass
 
 
 class GameState:
@@ -36,17 +35,31 @@ class GameState:
     last_blocks = None
     live_blocks = None
     live_mino = numpy.zeros((3, 4), dtype=bool)
+    live_mino_x = 0
+    live_mino_y = 0
     next_mino = numpy.zeros((3, 4), dtype=bool)
+
+    def switch_live_mino(self):
+        self.live_mino = self.next_mino
+        self.live_mino_x = 3 if len(self.live_mino) == 4 else 4
+        self.live_mino_y = 0
 
     def switch_frame(self):
         self.last_blocks = self.live_blocks
         self.live_blocks = numpy.zeros((self.width, self.height), dtype=bool)
-        self.live_mino = numpy.zeros((3, 4), dtype=bool)
-        self.next_mino = numpy.zeros((3, 4), dtype=bool)
 
     def capturing_done(self):
         self.next_mino = self.trim_field(self.next_mino)
+
+        # Check if we get hands on the next mino
+        field_changed = self.last_blocks != self.live_blocks
+        print(field_changed)
+        mino_spawned = self.game.capture.is_spawn_field_empty()
+        if field_changed.any() and mino_spawned:
+            self.switch_live_mino()
+
         self.game.game_state_done()
+        self.switch_frame()
 
     def set_block(self, x, y, color=None):
         self.live_blocks[x, y] = True
