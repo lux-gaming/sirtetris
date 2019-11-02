@@ -1,0 +1,12 @@
+README.md
+setup.py
+capture/FceuxStreamCapture.py
+capture/NesImageCapture.py
+capture/__init__.py
+capture/core.py
+gamestate/__init__.py
+gamestate/models.py
+sirtetris.egg-info/PKG-INFO
+sirtetris.egg-info/SOURCES.txt
+sirtetris.egg-info/dependency_links.txt
+sirtetris.egg-info/top_level.txt

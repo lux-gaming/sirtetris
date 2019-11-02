@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: sirtetris
+Version: 0.1.0
+Summary: Tetris bot engine
+Home-page: https://github.com/svencan/sirtetris
+Author: Sven Cannivy
+Author-email: sven.cannivy@gmail.com
+License: UNKNOWN
+Description: # sirtetris
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
