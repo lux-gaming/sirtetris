@@ -61,31 +61,31 @@ class GameState:
         self.next_mino[x, y] = True
 
     def __str__(self):
-        try:
+        out = 'Field:\n\n'
+        for y in range(0, self.height):
+            for x in range(0, self.width):
+                out += 'X' if self.live_blocks[x, y] else '.'
+            out += '\n'
 
-            out = 'Field:\n\n'
-            for y in range(0, self.height):
-                for x in range(0, self.width):
-                    out += 'X' if self.live_blocks[x, y] else '.'
-                out += '\n'
-
-            out += '\nNext tetromino:\n\n'
+        out += '\nNext tetromino:\n\n'
+        if len(self.next_mino) > 0 and len(self.next_mino[0]) > 0:
             for y in range(len(self.next_mino[0])):
                 for x in range(len(self.next_mino)):
                     out += 'X' if self.next_mino[x, y] else '.'
                 out += '\n'
-        except Exception:
-            out = 'Blind'
 
         return out
 
     @staticmethod
     def trim_field(field):
+        width = len(field)
+        height = len(field[0])
+
         # X offset
         no_x = True
         off_x = 0
-        for x in range(3):
-            for y in range(4):
+        for x in range(width):
+            for y in range(height):
                 if field[x, y]:
                     no_x = False
             if no_x:
@@ -94,8 +94,8 @@ class GameState:
         # Y offset
         no_y = True
         off_y = 0
-        for y in range(4):
-            for x in range(3):
+        for y in range(height):
+            for x in range(width):
                 if field[x, y]:
                     no_y = False
             if no_y:
@@ -104,8 +104,8 @@ class GameState:
         # Maxima
         max_x = 0
         max_y = 0
-        for x in range(3):
-            for y in range(4):
+        for x in range(width):
+            for y in range(height):
                 max_x = x if field[x, y] and x > max_x else max_x
                 max_y = y if field[x, y] and y > max_y else max_y
 

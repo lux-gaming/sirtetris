@@ -42,16 +42,37 @@ class ImageCapture(Capture):
     def capture(self):
         image = Image.open(self.source)
         if not image:
-            print('I\'m blind...')
+            print('I can\'t see shit.')
 
         # Get blocks
         field = self.get_field(self.field_offset_x, self.field_offset_y, self.xtiles, self.ytiles, image)
         self.game.state.set_blocks(field)
 
         # Get next tetromino
-        mino = self.get_field(self.next_mino_offset_x, self.next_mino_offset_y, 4, 4, image)
-        self.game.state.set_next_mino(mino)
+        # Check if it is a square piece
+        square = self.get_field(self.next_mino_offset_x + 4, self.next_mino_offset_y + 9, 3, 3, image)
 
+        column1 = square[0][0] and square[1][0] and not square[2][0]
+        column2 = square[0][1] and square[1][1] and not square[2][1]
+        column3 = not (square[0][2] and square[1][2] and square[2][2])
+
+        if column1 and column2 and column3:
+            square[3, 0] = square[3, 1] = square[3, 2] = square[3, 3] = False
+            square[0, 3] = square[1, 3] = square[2, 3] = False
+            self.game.state.set_next_mino(square)
+            self.game.state.capturing_done()
+            return
+
+        mino = self.get_field(self.next_mino_offset_x, self.next_mino_offset_y, 3, 3, image)
+
+        if mino[0, 2] and mino[1, 2] and mino[2, 2] and mino[0, 1] and mino[1, 1] and mino[2, 1]:
+            line = numpy.zeros((4, 1), dtype=bool)
+            line[0, 0] = line[1, 0] = line[2, 0] = line[3, 0] = True
+            self.game.state.set_next_mino(line)
+            self.game.state.capturing_done()
+            return
+
+        self.game.state.set_next_mino(mino)
         self.game.state.capturing_done()
 
     def get_field(self, offset_x, offset_y, width, height, image):
