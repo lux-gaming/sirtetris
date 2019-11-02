@@ -1,6 +1,6 @@
 import numpy
 
-from capture.core import Capture
+from sirtetris.capture.core import Capture
 
 
 class Game:

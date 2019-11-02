@@ -1,7 +1,6 @@
 README.md
 setup.py
 sirtetris/__init__.py
-sirtetris/sandbox.py
 sirtetris.egg-info/PKG-INFO
 sirtetris.egg-info/SOURCES.txt
 sirtetris.egg-info/dependency_links.txt
