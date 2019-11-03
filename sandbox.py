@@ -8,5 +8,7 @@ controller = WindowController()
 bot = RandomBot()
 
 game = Game(silent=True)
-game.connect(capture).connect(controller).connect(bot)
+game.connect(capture)
+game.connect(controller)
+game.connect(bot)
 game.capture.listen()

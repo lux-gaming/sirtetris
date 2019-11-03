@@ -18,12 +18,12 @@ class RandomBot(Bot):
 
     def play(self):
         # Only one command per second
-        if self.last_command + 2 > time():
+        if self.last_command + 0.5 > time():
             return []
 
         self.last_command = time()
 
-        buttons = ['LEFT', 'RIGHT', 'DOWN', 'A', 'B']
+        buttons = ['LEFT', 'RIGHT', 'DOWN']
         button = buttons[randint(0, len(buttons)-1)]
 
         commands = [
@@ -31,5 +31,3 @@ class RandomBot(Bot):
         ]
 
         return commands
-
-

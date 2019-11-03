@@ -7,8 +7,6 @@ from time import sleep
 import gi
 gi.require_version('Gtk', '3.0')
 
-from time import time
-
 
 class WindowController(Controller):
 
