@@ -5,9 +5,14 @@ sirtetris.egg-info/PKG-INFO
 sirtetris.egg-info/SOURCES.txt
 sirtetris.egg-info/dependency_links.txt
 sirtetris.egg-info/top_level.txt
+sirtetris/bot/Bot.py
+sirtetris/bot/__init__.py
 sirtetris/capture/FceuxStreamCapture.py
 sirtetris/capture/NesImageCapture.py
 sirtetris/capture/__init__.py
 sirtetris/capture/core.py
+sirtetris/controller/Controller.py
+sirtetris/controller/WindowController.py
+sirtetris/controller/__init__.py
 sirtetris/gamestate/__init__.py
 sirtetris/gamestate/models.py

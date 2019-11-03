@@ -22,7 +22,7 @@ The overall game loop is as follows:
 
 ## Getting started
 
-The package comes with a ``sandbox.py`` which connects to a Fceux emulator for capturing and controlling, and let's a bot yield random commands:
+The package comes with a ``sandbox.py`` which connects to a Fceux emulator for capturing and controlling, and lets a bot yield random commands:
 
 ``` python
 from sirtetris.gamestate.models import Game

@@ -1,29 +1,50 @@
 import numpy
 
 from sirtetris.capture.core import Capture
+from sirtetris.controller.Controller import Controller, Command
 
 
 class Game:
     state = None
     capture = None
     controller = None
+    bot = None
+    silent = None
 
-    def __init__(self):
+    def __init__(self, silent=False):
         self.state = GameState()
         self.state.game = self
+        self.silent = silent
 
     def connect(self, thing):
+        from sirtetris.bot.Bot import Bot
+
         if isinstance(thing, Capture):
             self.capture = thing
             self.capture.game = self
             self.state.width = self.capture.xtiles
             self.state.height = self.capture.ytiles
-            return
+            return self
+        elif isinstance(thing, Controller):
+            self.controller = thing
+            return self
+        elif isinstance(thing, Bot):
+            self.bot = thing
+            return self
 
-        print('Error: Cannot determine type of that thing.')
+        print('Error: Cannot determine the type of that thing.')
 
     def game_state_done(self):
-        print(self.state)
+        if not self.silent:
+            print(self.state)
+
+        if self.controller and self.bot:
+            commands = self.bot.play()
+            for command in commands:
+                self.controller.send(command)
+                self.state.track_live_mino(command)
+
+        self.state.track_live_mino()
 
 
 class GameState:
@@ -39,6 +60,65 @@ class GameState:
     live_mino_y = 0
     next_mino = numpy.zeros((3, 4), dtype=bool)
 
+    def track_live_mino(self, command=None):
+        mino_width = len(self.live_mino)
+        if mino_width == 0:
+            return
+
+        # Check if mino can move where it is commanded to move (f=a=clockwise)
+        if command and self.live_mino is not None:
+            mino = self.live_mino
+            mino_x = self.live_mino_x
+            mino_y = self.live_mino_y
+
+            if command.button == 'A':
+                mino = self.rotate_right(mino)
+            elif command.button == 'B':
+                mino = self.rotate_right(mino)
+            elif command.button == 'LEFT':
+                mino_x -= 1
+            elif command.button == 'RIGHT':
+                mino_x += 1
+            elif command.button == 'DOWN':
+                mino_y += 1
+
+            mino_width = len(mino)
+            mino_height = len(mino[0])
+
+            tiles = self.game.capture.get_tiles(mino_x, mino_y, mino_width, mino_height)
+            can_fit = True
+            for x in range(mino_width):
+                for y in range(mino_height):
+                    if mino[x, y] and tiles[x, y]:
+                        can_fit = False
+
+            if can_fit:
+                print('Command', command.button, 'can fit', can_fit)
+                self.live_mino_x = mino_x
+                self.live_mino_y = mino_y
+                self.live_mino = mino
+
+        # Check if the mino is still where we think it is
+        mino_width = len(self.live_mino)
+        mino_height = len(self.live_mino[0])
+        mino_field = self.game.capture.get_tiles(self.live_mino_x, self.live_mino_y, mino_width, mino_height)
+        mino_present = ((mino_field + self.live_mino) == self.live_mino).all()
+
+        # If it's not present, look a few tiles further down
+        look_further = 1
+        while not mino_present and look_further < 5:
+            mino_field = self.game.capture.get_tiles(
+                self.live_mino_x, self.live_mino_y+look_further,
+                mino_width, mino_height
+            )
+
+            mino_present = ((mino_field + self.live_mino) == self.live_mino).all()
+
+            if mino_present:
+                self.live_mino_y += 1
+            else:
+                look_further += 1
+
     def switch_live_mino(self):
         self.live_mino = self.next_mino
         self.live_mino_x = 3 if len(self.live_mino) == 4 else 4
@@ -50,14 +130,6 @@ class GameState:
 
     def capturing_done(self):
         self.next_mino = self.trim_field(self.next_mino)
-
-        # Check if we get hands on the next mino
-        field_changed = self.last_blocks != self.live_blocks
-        print(field_changed)
-        mino_spawned = self.game.capture.is_spawn_field_empty()
-        if field_changed.any() and mino_spawned:
-            self.switch_live_mino()
-
         self.game.game_state_done()
         self.switch_frame()
 
@@ -68,30 +140,63 @@ class GameState:
         self.live_blocks = field
 
     def set_next_mino(self, field):
-        self.next_mino = field
+        field = self.trim_field(field)
+        differences = self.next_mino != field
+        if not isinstance(differences, bool):
+            differences = differences.any()
+
+        if differences:
+            self.switch_live_mino()
+            self.next_mino = field
 
     def set_next_mino_block(self, x, y, color=None):
         self.next_mino[x, y] = True
 
     def __str__(self):
         out = 'Field:\n\n'
-        for y in range(0, self.height):
-            for x in range(0, self.width):
-                out += 'X' if self.live_blocks[x, y] else '.'
-            out += '\n'
+        out += self.field_to_string(self.live_blocks)
 
         out += '\nNext tetromino:\n\n'
-        if len(self.next_mino) > 0 and len(self.next_mino[0]) > 0:
-            for y in range(len(self.next_mino[0])):
-                for x in range(len(self.next_mino)):
-                    out += 'X' if self.next_mino[x, y] else '.'
-                out += '\n'
+        out += self.field_to_string(self.next_mino)
 
         return out
 
     @staticmethod
+    def field_to_string(field):
+
+        if field is None:
+            return ''
+
+        width = len(field)
+        if width == 0:
+            return ''
+
+        height = len(field[0])
+        result = ''
+        for y in range(height):
+            for x in range(width):
+                if field[x, y]:
+                    result += 'X'
+                else:
+                    result += '.'
+            result += '\n'
+
+        return result
+
+    @staticmethod
+    def rotate_right(field):
+        return numpy.rot90(numpy.rot90(numpy.rot90(field)))
+
+    @staticmethod
+    def rotate_left(field):
+        return numpy.rot90(field)
+
+    @staticmethod
     def trim_field(field):
         width = len(field)
+        if width == 0:
+            return []
+
         height = len(field[0])
 
         # X offset
