@@ -4,7 +4,7 @@ sirtetris is an engine for Tetris bots. It's core is the gamestate module which 
 
   * **capture**:
     * Sets the size of the game field (number of horizontal and vertical tiles), size of the tiles, where to find the next tetromino (piece),
-    * analyze a source (e.g. an image) to provide methods to check whether a tile is occupied or not, whether the spawn field is occupied or not, and to get the tiles within a given dimension, and,
+    * analyze a source (e.g. an image) to provide methods to check whether a tile is occupied or not, whether the spawn field is occupied or not, and to get the tiles within a given dimension, and
     * sets the next tetromino.
   * **controller**:
     * Defines the command button (A, B, LEFT, RIGHT, UP, DOWN) and action (tap, press, release), and
