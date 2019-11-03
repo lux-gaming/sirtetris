@@ -1,29 +1,46 @@
 import numpy
 
 from sirtetris.capture.core import Capture
+from sirtetris.controller.Controller import Controller, Command
 
 
 class Game:
     state = None
     capture = None
     controller = None
+    bot = None
+    silent = None
 
-    def __init__(self):
+    def __init__(self, silent=False):
         self.state = GameState()
         self.state.game = self
+        self.silent = silent
 
     def connect(self, thing):
+        from sirtetris.bot.Bot import Bot
+
         if isinstance(thing, Capture):
             self.capture = thing
             self.capture.game = self
             self.state.width = self.capture.xtiles
             self.state.height = self.capture.ytiles
-            return
+            return self
+        elif isinstance(thing, Controller):
+            self.controller = thing
+            return self
+        elif isinstance(thing, Bot):
+            self.bot = thing
+            return self
 
         print('Error: Cannot determine type of that thing.')
 
     def game_state_done(self):
-        print(self.state)
+        if not self.silent:
+            print(self.state)
+
+        commands = self.bot.play()
+        for command in commands:
+            self.controller.send(command)
 
 
 class GameState:
@@ -53,7 +70,6 @@ class GameState:
 
         # Check if we get hands on the next mino
         field_changed = self.last_blocks != self.live_blocks
-        print(field_changed)
         mino_spawned = self.game.capture.is_spawn_field_empty()
         if field_changed.any() and mino_spawned:
             self.switch_live_mino()
