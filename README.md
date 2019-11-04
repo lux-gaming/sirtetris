@@ -1,6 +1,6 @@
 # sirtetris
 
-sirtetris is an engine for Tetris bots. It's core is the gamestate module which is engageable with the following things:
+sirtetris is an engine for Tetris bots. Its core is the gamestate module which is engageable with the following things:
 
   * **capture**:
     * Sets the size of the game field (number of horizontal and vertical tiles), size of the tiles, where to find the next tetromino (piece),
@@ -15,8 +15,8 @@ sirtetris is an engine for Tetris bots. It's core is the gamestate module which 
 The overall game loop is as follows:
 
  * The connected capturing method updates the game with a gamestate model,
- * the game invokes the connected bot,
- * the bot has arbitrary intelligence to decide which commands to return to the game
+ * the game invokes the connected bot with the gamestate,
+ * the bot has arbitrary intelligence to decide which commands to return to the game,
  * the game sends those commands to the connected controller,
  * the controller executes the commands on its destination (emulator, console, ...).
 

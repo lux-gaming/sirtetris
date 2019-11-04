@@ -12,6 +12,9 @@ class Bot:
     def play(self):
         pass
 
+    def set_gamestate(self, gamestate):
+        self.gamestate = gamestate
+
 
 class RandomBot(Bot):
     last_command = 0

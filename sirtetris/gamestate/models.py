@@ -39,6 +39,7 @@ class Game:
             print(self.state)
 
         if self.controller and self.bot:
+            self.bot.set_gamestate(self.state)
             commands = self.bot.play()
             for command in commands:
                 self.controller.send(command)
