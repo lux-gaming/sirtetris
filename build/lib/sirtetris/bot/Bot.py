@@ -20,8 +20,10 @@ class RandomBot(Bot):
     last_command = 0
 
     def play(self):
+        print('HELLO?!')
         # Only one command per second
         if self.last_command + 0.5 > time():
+            print('NOPE')
             return []
 
         self.last_command = time()
@@ -32,5 +34,7 @@ class RandomBot(Bot):
         commands = [
             Command(button, 'tap'),
         ]
+
+        print('GENERATED', button)
 
         return commands

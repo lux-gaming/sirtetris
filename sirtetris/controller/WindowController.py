@@ -16,7 +16,7 @@ class WindowController(Controller):
         screen = window.get_screen()
         w = screen.get_active_window()
         if not w.get_geometry().width == 288:
-            return
+            return False
 
         keys = {
             'A': 'f',
@@ -37,5 +37,7 @@ class WindowController(Controller):
             keyboard.release(key)
         elif command.action == 'tap':
             keyboard.press(key)
-            sleep(0.05)
+            sleep(0.02)  # Just a little longer as the polling rate of the NES
             keyboard.release(key)
+
+        return True

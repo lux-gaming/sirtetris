@@ -12,6 +12,7 @@ class Game:
     silent = None
 
     def __init__(self, silent=False):
+        print('Go fuck yourself.')
         self.state = GameState()
         self.state.game = self
         self.silent = silent
@@ -38,14 +39,15 @@ class Game:
         if not self.silent:
             print(self.state)
 
+        self.state.track_live_mino()
+
         if self.controller and self.bot:
             self.bot.set_gamestate(self.state)
             commands = self.bot.play()
+            print('BOT PLAY')
             for command in commands:
-                self.controller.send(command)
-                self.state.track_live_mino(command)
-
-        self.state.track_live_mino()
+                if self.controller.send(command):
+                    self.state.track_live_mino(command)
 
 
 class GameState:
@@ -119,6 +121,8 @@ class GameState:
                 self.live_mino_y += 1
             else:
                 look_further += 1
+
+        print('WE THINK MINO IS HERE', self.live_mino_x, self.live_mino_y)
 
     def switch_live_mino(self):
         self.live_mino = self.next_mino

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='sirtetris',
-    version='0.1.6',
+    version='0.1.7',
     scripts=[],
     author="Sven Cannivy",
     author_email="sven.cannivy@gmail.com",

@@ -38,14 +38,14 @@ class Game:
         if not self.silent:
             print(self.state)
 
+        self.state.track_live_mino()
+
         if self.controller and self.bot:
             self.bot.set_gamestate(self.state)
             commands = self.bot.play()
             for command in commands:
-                self.controller.send(command)
-                self.state.track_live_mino(command)
-
-        self.state.track_live_mino()
+                if self.controller.send(command):
+                    self.state.track_live_mino(command)
 
 
 class GameState:
@@ -62,63 +62,7 @@ class GameState:
     next_mino = numpy.zeros((3, 4), dtype=bool)
 
     def track_live_mino(self, command=None):
-        mino_width = len(self.live_mino)
-        if mino_width == 0:
-            return
-
-        # Check if mino can move where it is commanded to move (f=a=clockwise)
-        if command and self.live_mino is not None:
-            mino = self.live_mino
-            mino_x = self.live_mino_x
-            mino_y = self.live_mino_y
-
-            if command.button == 'A':
-                mino = self.rotate_right(mino)
-            elif command.button == 'B':
-                mino = self.rotate_left(mino)
-            elif command.button == 'LEFT':
-                mino_x -= 1
-            elif command.button == 'RIGHT':
-                mino_x += 1
-            elif command.button == 'DOWN':
-                mino_y += 1
-
-            mino_width = len(mino)
-            mino_height = len(mino[0])
-
-            tiles = self.game.capture.get_tiles(mino_x, mino_y, mino_width, mino_height)
-            can_fit = True
-            for x in range(mino_width):
-                for y in range(mino_height):
-                    if mino[x, y] and tiles[x, y]:
-                        can_fit = False
-
-            if can_fit:
-                print('Command', command.button, 'can fit', can_fit)
-                self.live_mino_x = mino_x
-                self.live_mino_y = mino_y
-                self.live_mino = mino
-
-        # Check if the mino is still where we think it is
-        mino_width = len(self.live_mino)
-        mino_height = len(self.live_mino[0])
-        mino_field = self.game.capture.get_tiles(self.live_mino_x, self.live_mino_y, mino_width, mino_height)
-        mino_present = ((mino_field + self.live_mino) == self.live_mino).all()
-
-        # If it's not present, look a few tiles further down
-        look_further = 1
-        while not mino_present and look_further < 5:
-            mino_field = self.game.capture.get_tiles(
-                self.live_mino_x, self.live_mino_y+look_further,
-                mino_width, mino_height
-            )
-
-            mino_present = ((mino_field + self.live_mino) == self.live_mino).all()
-
-            if mino_present:
-                self.live_mino_y += 1
-            else:
-                look_further += 1
+        pass
 
     def switch_live_mino(self):
         self.live_mino = self.next_mino
@@ -189,13 +133,72 @@ class GameState:
         result += '   0123456789'
         return result
 
-    @staticmethod
-    def rotate_right(field):
-        return numpy.rot90(numpy.rot90(numpy.rot90(field)))
+    """
+    Do I look like a mathematician? HELP.
+    Write a test and then rewrite this mess.
+    Ref: https://vignette.wikia.nocookie.net/tetrisconcept/images/3/3d/SRS-pieces.png/revision/latest?cb=20060626173148
+    """
+    def rotate_right(self, field, x, y):
+        oh = self.translate(['XX', 'XX'])
+        if numpy.array_equal(oh, field):
+            return [oh, x, y]
+
+        line = self.translate(['XXXX'])
+        if numpy.array_equal(line, field):
+            return [self.translate(['X', 'X', 'X', 'X']), x+2, y-2]
+        if numpy.array_equal(self.rot270(line), field):
+            return [self.translate(['XXXX']), x-2, y+2]
+
+        ess = self.translate([' XX', 'XX '])
+        if numpy.array_equal(ess, field):
+            return [self.translate(['X ', 'XX', ' X']), x+1, y-1]
+        if numpy.array_equal(self.rot270(ess), field):
+            return [self.translate([' XX', 'XX ']), x-1, y+1]
+
+        zet = self.translate(['XX ', ' XX'])
+        if numpy.array_equal(zet, field):
+            return [self.translate([' X', 'XX', 'X ']), x+1, y-1]
+        if numpy.array_equal(self.rot270(zet), field):
+            return [self.translate(['XX ', ' XX']), x-1, y+1]
+
+        ell = self.translate(['  X', 'XXX'])
+        if numpy.array_equal(ell, field):
+            return [self.translate(['X ', 'X ', 'XX']), x+1, y]
+        if numpy.array_equal(self.rot270(ell), field):
+            return [self.translate(['XXX', 'X  ']), x-1, y+1]
+        if numpy.array_equal(self.rot270(self.rot270(ell)), field):
+            return [self.translate(['XX', ' X', ' X']), x, y-1]
+        if numpy.array_equal(numpy.rot90(ell), field):
+            return [self.translate(['  X', 'XXX']), x, y-1]
+
+        iot = self.translate(['X  ', 'XXX'])
+        if numpy.array_equal(iot, field):
+            return [self.translate(['XX', 'X ', 'X ']), x+1, y]
+        if numpy.array_equal(self.rot270(iot), field):
+            return [self.translate(['XXX', '  X']), x-1, y+1]
+        if numpy.array_equal(self.rot270(self.rot270(iot)), field):
+            return [self.translate([' X', ' X', 'XX']), x, y-1]
+        if numpy.array_equal(numpy.rot90(iot), field):
+            return [self.translate(['X  ', 'XXX']), x, y-1]
+
+        teh = self.translate([' X ', 'XXX'])
+        if numpy.array_equal(teh, field):
+            return [self.translate([' X ', ' XX', ' X ']), x+1, y]
+        if numpy.array_equal(self.rot270(teh), field):
+            return [self.translate(['XXX', ' X ']), x-1, y+1]
+        if numpy.array_equal(self.rot270(self.rot270(teh)), field):
+            return [self.translate([' X', 'XX', ' X']), x, y-1]
+        if numpy.array_equal(numpy.rot90(teh), field):
+            return [self.translate([' X ', 'XXX']), x, y-1]
+
+        raise Exception('Unknown rotation')
 
     @staticmethod
-    def rotate_left(field):
-        return numpy.rot90(field)
+    def rot270(field):
+        return numpy.rot90(numpy.rot90(numpy.rot90(field)))
+
+    def rotate_left(self, field, x, y):
+        return [self.rotate_right(self.rotate_right(self.rotate_right(field))), x, y]
 
     @staticmethod
     def trim_field(field):
@@ -234,3 +237,13 @@ class GameState:
                 max_y = y if field[x, y] and y > max_y else max_y
 
         return field[off_x:max_x+1, off_y:max_y+1]
+
+    @staticmethod
+    def translate(string):
+        description = string
+        tetromino = numpy.zeros((len(description[0]), len(description)), dtype=bool)
+        for x in range(len(description[0])):
+            for y in range(len(description)):
+                tetromino[x, y] = description[y][x] == 'X'
+
+        return tetromino

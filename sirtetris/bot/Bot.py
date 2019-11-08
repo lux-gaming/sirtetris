@@ -26,11 +26,9 @@ class RandomBot(Bot):
 
         self.last_command = time()
 
-        buttons = ['LEFT', 'RIGHT', 'DOWN']
+        buttons = ['LEFT', 'RIGHT', 'DOWN', 'A', 'B']
         button = buttons[randint(0, len(buttons)-1)]
 
-        commands = [
-            Command(button, 'tap'),
-        ]
+        commands = [Command(button, 'tap')]
 
         return commands
