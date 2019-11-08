@@ -75,7 +75,7 @@ class GameState:
             if command.button == 'A':
                 mino = self.rotate_right(mino)
             elif command.button == 'B':
-                mino = self.rotate_right(mino)
+                mino = self.rotate_left(mino)
             elif command.button == 'LEFT':
                 mino_x -= 1
             elif command.button == 'RIGHT':
@@ -160,11 +160,13 @@ class GameState:
         out += '\nNext tetromino:\n\n'
         out += self.field_to_string(self.next_mino)
 
+        out += '\nLive tetromino (' + str(self.live_mino_x) + ',' + str(self.live_mino_y) + '):\n\n'
+        out += self.field_to_string(self.live_mino)
+
         return out
 
     @staticmethod
-    def field_to_string(field):
-
+    def field_to_string(field, mino=None, mino_x=0, mino_y=0):
         if field is None:
             return ''
 
@@ -172,16 +174,19 @@ class GameState:
         if width == 0:
             return ''
 
+        result = '   0123456789\n'
+
         height = len(field[0])
-        result = ''
         for y in range(height):
+            result += str(y).rjust(2, ' ') + ' '
             for x in range(width):
                 if field[x, y]:
                     result += 'X'
                 else:
-                    result += '.'
+                    result += ' '
             result += '\n'
 
+        result += '   0123456789'
         return result
 
     @staticmethod

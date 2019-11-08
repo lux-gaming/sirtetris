@@ -7,7 +7,7 @@ capture = FceuxStreamCapture()
 controller = WindowController()
 bot = RandomBot()
 
-game = Game(silent=True)
+game = Game()
 game.connect(capture)
 game.connect(controller)
 game.connect(bot)
