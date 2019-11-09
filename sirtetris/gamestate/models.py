@@ -44,8 +44,7 @@ class Game:
             self.bot.set_gamestate(self.state)
             commands = self.bot.play()
             for command in commands:
-                if self.controller.send(command):
-                    self.state.track_live_mino(command)
+                self.controller.send(command)
 
 
 class GameState:
@@ -62,7 +61,64 @@ class GameState:
     next_mino = numpy.zeros((3, 4), dtype=bool)
 
     def track_live_mino(self, command=None):
-        pass
+        mino = self.live_mino
+        mino_x = self.live_mino_x
+        mino_y = self.live_mino_y
+
+        # Check each rotation, begin with last known rotation
+        rotations = [
+            [mino, mino_x, mino_y],
+            self.rotate_right(mino, mino_x, mino_y),
+            self.rotate_right(self.rotate_right(mino, mino_x, mino_y), mino_x, mino_y),
+            self.rotate_right(self.rotate_right(self.rotate_right(mino, mino_x, mino_y), mino_x, mino_y), mino_x, mino_y),
+        ]
+
+        for rotation in rotations:
+            if rotation is None:
+                continue
+
+            mino, mino_x, mino_y = rotation
+
+            # Speculate where it could be, begin with last known position
+            speculations = [
+                [0, 0],
+                [0, 1],  # One down
+                [1, 0],  # One right
+                [1, 1],  # One right one down
+                [-1, 0],  # One left
+                [-1, 0],  # One left one down
+            ]
+
+            for speculation in speculations:
+                sx = speculation[0]
+                sy = speculation[1]
+
+                print('Speculating')
+                print(self.field_to_string(self.live_blocks, mino, mino_x + sx, mino_y + sy))
+
+                # Check if live tetromino is there
+                empty_field = numpy.zeros((self.width, self.height), bool)
+                for x in range(len(mino)):
+                    for y in range(len(mino)):
+                        try:
+                            empty_field = mino[mino_x + x + sx, mino_y + y + sy]
+                        except Exception:
+                            pass
+                mino_present = numpy.isin(empty_field, self.live_blocks).all()
+                print('MINO PRESENT?', mino_present)
+
+                # If this seems like the live tetromino, update it and return True
+                if mino_present:
+                    print('Updating live mino on position', str(mino_x + sx), str(mino_y + sy))
+                    print(self.field_to_string(mino))
+                    self.live_mino = mino
+                    self.live_mino_x = mino_x + sx
+                    self.live_mino_y = mino_y + sy
+                    return True
+
+        # We have not found the live tetromino
+        exit()
+        return False
 
     def switch_live_mino(self):
         self.live_mino = self.next_mino
@@ -127,7 +183,17 @@ class GameState:
                 if field[x, y]:
                     result += 'X'
                 else:
-                    result += ' '
+                    result += '.'
+
+                if mino is not None and x >= mino_x and y >= mino_y:
+                    offx = x - mino_x
+                    offy = y - mino_y
+                    if offx < len(mino) and offy < len(mino[0]):
+                        if mino[offx, offy]:
+                            nresult = list(result)
+                            nresult[-1] = 'M'
+                            result = "".join(nresult)
+
             result += '\n'
 
         result += '   0123456789'
@@ -139,6 +205,9 @@ class GameState:
     Ref: https://vignette.wikia.nocookie.net/tetrisconcept/images/3/3d/SRS-pieces.png/revision/latest?cb=20060626173148
     """
     def rotate_right(self, field, x, y):
+        if field is None or len(field) == 0:
+            return None
+
         oh = self.translate(['XX', 'XX'])
         if numpy.array_equal(oh, field):
             return [oh, x, y]
@@ -191,7 +260,7 @@ class GameState:
         if numpy.array_equal(numpy.rot90(teh), field):
             return [self.translate([' X ', 'XXX']), x, y-1]
 
-        raise Exception('Unknown rotation')
+        return [[], 0, 0]
 
     @staticmethod
     def rot270(field):
