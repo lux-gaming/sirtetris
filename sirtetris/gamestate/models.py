@@ -116,8 +116,6 @@ class GameState:
                     self.live_mino_y = mino_y + sy
                     return True
 
-        # We have not found the live tetromino
-        exit()
         return False
 
     def switch_live_mino(self):
