@@ -2,19 +2,21 @@ import numpy
 
 from sirtetris.capture.core import Capture
 from sirtetris.controller.Controller import Controller, Command
+from sirtetris.gamestate.debug import DebugMixin
 
 
-class Game:
+class Game(DebugMixin):
     state = None
     capture = None
     controller = None
     bot = None
-    silent = None
 
-    def __init__(self, silent=False):
+    def __init__(self, debug_cli=False, debug_file=None):
         self.state = GameState()
         self.state.game = self
-        self.silent = silent
+        self.init_debug(debug_cli, debug_file)
+        self.debug('Game initialized')
+        self.state.debug = self.debug
 
     def connect(self, thing):
         from sirtetris.bot.Bot import Bot
@@ -35,13 +37,15 @@ class Game:
         print('Error: Cannot determine the type of that thing.')
 
     def game_state_done(self):
-        if not self.silent:
-            print(self.state)
-
         self.state.track_live_mino()
 
-        if self.controller and self.bot:
+        if self.bot:
+            self.debug('Sending gamestate to bot')
+            self.debug('Field send to bot')
+            self.debug(self.state.field_to_string(self.state.live_blocks))
             self.bot.set_gamestate(self.state)
+
+        if self.controller and self.bot:
             commands = self.bot.play()
             for command in commands:
                 self.controller.send(command)
@@ -49,6 +53,7 @@ class Game:
 
 class GameState:
     game = None
+    debug = None
 
     width = None
     height = None
@@ -61,6 +66,7 @@ class GameState:
     next_mino = numpy.zeros((3, 4), dtype=bool)
 
     def track_live_mino(self, command=None):
+        self.debug('Tracking live mino')
         mino = self.live_mino
         mino_x = self.live_mino_x
         mino_y = self.live_mino_y
@@ -93,9 +99,6 @@ class GameState:
                 sx = speculation[0]
                 sy = speculation[1]
 
-                print('Speculating')
-                print(self.field_to_string(self.live_blocks, mino, mino_x + sx, mino_y + sy))
-
                 # Check if live tetromino is there
                 empty_field = numpy.zeros((self.width, self.height), bool)
                 for x in range(len(mino)):
@@ -105,12 +108,13 @@ class GameState:
                         except Exception:
                             pass
                 mino_present = numpy.isin(empty_field, self.live_blocks).all()
-                print('MINO PRESENT?', mino_present)
+                self.debug('Live tetromino present?')
+                self.debug(mino_present)
 
                 # If this seems like the live tetromino, update it and return True
                 if mino_present:
-                    print('Updating live mino on position', str(mino_x + sx), str(mino_y + sy))
-                    print(self.field_to_string(mino))
+                    self.debug('Updating live mino on position ' + str(mino_x + sx) + ' ' + str(mino_y + sy))
+                    self.debug(self.field_to_string(mino))
                     self.live_mino = mino
                     self.live_mino_x = mino_x + sx
                     self.live_mino_y = mino_y + sy
@@ -119,15 +123,18 @@ class GameState:
         return False
 
     def switch_live_mino(self):
+        self.debug('Switching live mino')
         self.live_mino = self.next_mino
         self.live_mino_x = 3 if len(self.live_mino) == 4 else 4
         self.live_mino_y = 0
 
     def switch_frame(self):
+        self.debug('Switching frame')
         self.last_blocks = self.live_blocks
         self.live_blocks = numpy.zeros((self.width, self.height), dtype=bool)
 
     def capturing_done(self):
+        self.debug('Capturing done')
         self.next_mino = self.trim_field(self.next_mino)
         self.game.game_state_done()
         self.switch_frame()
@@ -136,9 +143,12 @@ class GameState:
         self.live_blocks[x, y] = True
 
     def set_blocks(self, field):
+        self.debug('Setting blocks:')
+        self.debug(self.field_to_string(field))
         self.live_blocks = field
 
     def set_next_mino(self, field):
+        self.debug('Setting next mino')
         field = self.trim_field(field)
         differences = self.next_mino != field
         if not isinstance(differences, bool):
