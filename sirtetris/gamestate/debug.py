@@ -1,8 +1,10 @@
 from datetime import datetime
 
+
 class Debug:
     cli = False
     file = None
+    user = None
 
     def __init__(self, cli=False, file=None):
         self.cli = cli
