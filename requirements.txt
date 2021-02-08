@@ -11,7 +11,7 @@ defer==1.0.6
 distro-info===0.18ubuntu0.18.04.1
 docutils==0.14
 html5lib==0.999999999
-httplib2==0.18.0
+httplib2==0.19.0
 idna==2.6
 keyring==10.6.0
 keyrings.alt==3.0
