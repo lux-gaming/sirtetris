@@ -33,7 +33,7 @@ oauth==1.0.1
 olefile==0.45.1
 pexpect==4.2.1
 Pillow==6.2.0
-protobuf==3.0.0
+protobuf==3.18.3
 pycairo==1.18.2
 pycrypto==2.6.1
 pycups==1.9.73
